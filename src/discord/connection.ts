@@ -33,18 +33,50 @@ function bytes(base64: string): Buffer {
   return Buffer.from(base64, "base64");
 }
 
-/** Action rows, five buttons each — Discord's own limit on a row. */
+/** Discord's hard limits on a message's buttons. */
+const MAX_ROWS = 5;
+const MAX_PER_ROW = 5;
+
+/**
+ * Re-flow the core's button grid into Discord's shape.
+ *
+ * The core sends a plain grid and knows no platform's limits, so its menus
+ * are laid out one option per row — which is right for a narrow Telegram
+ * keyboard and has no row limit there. Discord allows FIVE action rows, and
+ * the feedback menu is six or seven, so mapping the grid one-to-one made
+ * every menu fail with `components[BASE_TYPE_MAX_LENGTH]` and no feedback was
+ * collectable on this platform at all.
+ *
+ * So the buttons are re-packed rather than truncated: dropping an option
+ * would quietly change the question being asked. The row width is the
+ * narrowest that still fits everything, which keeps long labels readable
+ * instead of cramming five to a row whenever it would fit.
+ */
+export function fitToRows(keyboard: MenuGrid): MenuGrid {
+  const buttons = keyboard.flat();
+  if (buttons.length === 0) return [];
+  if (buttons.length > MAX_ROWS * MAX_PER_ROW) {
+    // 25 is everything Discord can show; silently losing the rest would be
+    // worse than saying so.
+    throw new Error(
+      `a Discord message can carry ${MAX_ROWS * MAX_PER_ROW} buttons, not ${buttons.length}`,
+    );
+  }
+  const perRow = Math.min(MAX_PER_ROW, Math.ceil(buttons.length / MAX_ROWS));
+  const rows: MenuGrid = [];
+  for (let i = 0; i < buttons.length; i += perRow) rows.push(buttons.slice(i, i + perRow));
+  return rows;
+}
+
 function toComponents(keyboard: MenuGrid) {
-  return keyboard.map((row) =>
+  return fitToRows(keyboard).map((row) =>
     new ActionRowBuilder<ButtonBuilder>().addComponents(
-      row
-        .slice(0, 5)
-        .map((button) =>
-          new ButtonBuilder()
-            .setCustomId(button.callbackData)
-            .setLabel(button.text)
-            .setStyle(ButtonStyle.Secondary),
-        ),
+      row.map((button) =>
+        new ButtonBuilder()
+          .setCustomId(button.callbackData)
+          .setLabel(button.text)
+          .setStyle(ButtonStyle.Secondary),
+      ),
     ),
   );
 }
