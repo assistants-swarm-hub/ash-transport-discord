@@ -1,7 +1,7 @@
 import type { InboundMessage, Normalizer } from "@assistants-swarm-hub/transport-sdk";
 import type { Message } from "discord.js";
 
-import { attachmentNote, loadMessageMedia } from "../discord/media";
+import { attachmentNote, kindOf, loadMessageMedia } from "../discord/media";
 
 /**
  * One Discord message, read into the contract's vocabulary. That is the whole
@@ -21,7 +21,10 @@ export const normalizeMessage: Normalizer<Message> = async (
   // in the client. Outgoing text already strips raw mention tokens for the
   // same reason; this is that rule on the way in.
   const text = [message.cleanContent, note].filter(Boolean).join(" ").trim();
-  const hasMedia = message.attachments.size > 0 || message.stickers.size > 0;
+  // An attachment the core cannot read is named in the text, not forwarded;
+  // the message still exists for its words and its note.
+  const hasMedia =
+    message.stickers.size > 0 || [...message.attachments.values()].some((a) => kindOf(a) !== null);
   if (!text && !hasMedia) return null;
 
   const replied = message.reference?.messageId
