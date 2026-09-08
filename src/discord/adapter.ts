@@ -1,4 +1,4 @@
-import type { PlatformAdapter, PlatformConnection } from "@assistant-hub-swarm/transport-sdk";
+import type { PlatformAdapter, PlatformConnection } from "@assistants-swarm-hub/transport-sdk";
 import {
   Client,
   Events,

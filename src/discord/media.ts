@@ -1,7 +1,7 @@
 import {
   normalizeImageForChat,
   type TransportMedia,
-} from "@assistant-hub-swarm/transport-sdk";
+} from "@assistants-swarm-hub/transport-sdk";
 import type { Attachment, Message } from "discord.js";
 
 /**

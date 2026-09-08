@@ -4,7 +4,7 @@ import type {
   PlatformConnection,
   SendOptions,
   SentMessage,
-} from "@assistant-hub-swarm/transport-sdk";
+} from "@assistants-swarm-hub/transport-sdk";
 import {
   ActionRowBuilder,
   AttachmentBuilder,

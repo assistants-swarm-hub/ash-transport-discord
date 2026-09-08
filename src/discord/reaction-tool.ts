@@ -4,7 +4,7 @@ import {
   tracedTool,
   turnOf,
   type TransportRuntime,
-} from "@assistant-hub-swarm/transport-sdk";
+} from "@assistants-swarm-hub/transport-sdk";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Message } from "discord.js";
 import { z } from "zod";

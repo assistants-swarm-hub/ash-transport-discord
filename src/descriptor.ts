@@ -1,4 +1,4 @@
-import type { TransportDescriptor } from "@assistant-hub-swarm/transport-sdk";
+import type { TransportDescriptor } from "@assistants-swarm-hub/transport-sdk";
 
 import { MAX_MESSAGE_LENGTH } from "./discord/ids";
 

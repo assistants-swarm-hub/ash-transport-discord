@@ -1,13 +1,13 @@
 {
-  "name": "ahw-transport-discord",
-  "version": "1.0.0",
+  "name": "ash-transport-discord",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "The Discord transport for assistant-hub-swarm: stateless gateway clients that register with a core, forward every update as transport events, perform the sends, and host Discord's actions as MCP tools.",
+  "description": "The Discord transport for assistants-swarm-hub: stateless gateway clients that register with a core, forward every update as transport events, perform the sends, and host Discord's actions as MCP tools.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/assistant-hub-swarm/ahw-transport-discord.git"
+    "url": "git+https://github.com/assistants-swarm-hub/ash-transport-discord.git"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@assistant-hub-swarm/transport-sdk": "^3.0.0",
+    "@assistants-swarm-hub/transport-sdk": "^4.0.0",
     "@hono/node-server": "^1.14.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "discord.js": "^14.27.0",

@@ -1,6 +1,6 @@
-# ahw-transport-discord
+# ash-transport-discord
 
-The **Discord transport** for [assistant-hub-swarm][core]: stateless gateway
+The **Discord transport** for [assistants-swarm-hub][core]: stateless gateway
 clients that register with a running core, forward every update as transport
 events, perform the sends the core asks for, and host Discord's own actions as
 MCP tools.
@@ -10,7 +10,7 @@ the core at boot (registration answers with the desired state) and from the bus
 (config changes). Its whole job is translation.
 
 It is also the **second proof** of the transport contract: it was written
-against the published [`@assistant-hub-swarm/transport-sdk`][sdk] and
+against the published [`@assistants-swarm-hub/transport-sdk`][sdk] and
 [the manual][manual] alone, and the core needed no change to accept it — no
 branch, no capability flag, no list to add `discord` to.
 
@@ -24,7 +24,7 @@ cp .env.example .env     # REDIS_URL, INTERNAL_API_TOKEN, CORE_API_URL, SELF_URL
 npm run dev
 ```
 
-`.npmrc` points the `@assistant-hub-swarm` scope at GitHub Packages, which
+`.npmrc` points the `@assistants-swarm-hub` scope at GitHub Packages, which
 wants a token on every request: a public package there is readable by any
 account, but not anonymously. Put one with `read:packages` in your user-level
 `~/.npmrc`, so it never reaches this repository:
@@ -38,7 +38,7 @@ the core's, and no change to the core:
 
 ```yaml
   discord:
-    image: ghcr.io/assistant-hub-swarm/ahw-transport-discord:1.0.0
+    image: ghcr.io/assistants-swarm-hub/ash-transport-discord:1.0.0
     depends_on:
       redis: { condition: service_healthy }
     environment:
@@ -156,7 +156,7 @@ restart the service after a change before judging a live check — `tsx watch`
 will not re-run them.
 
 Releases: bump `version` in `package.json`, push to `main`, and the workflow
-verifies, pushes `ghcr.io/assistant-hub-swarm/ahw-transport-discord` on that
+verifies, pushes `ghcr.io/assistants-swarm-hub/ash-transport-discord` on that
 version and tags the commit.
 
 ## The contract
@@ -168,6 +168,6 @@ its image is tagged with, and `CONTRACT_MAJOR` — exported by the SDK — is th
 **wire** major, announced at registration. A core that speaks another major
 refuses this transport by name, with a reason its dashboard shows.
 
-[core]: https://github.com/assistant-hub-swarm/ahw-core
-[manual]: https://github.com/assistant-hub-swarm/ahw-core/blob/main/docs/development/adding-a-transport.md
-[sdk]: https://github.com/assistant-hub-swarm/ahw-core/blob/main/packages/transport-sdk/README.md
+[core]: https://github.com/assistants-swarm-hub/ash-core
+[manual]: https://github.com/assistants-swarm-hub/ash-core/blob/main/docs/development/adding-a-transport.md
+[sdk]: https://github.com/assistants-swarm-hub/ash-core/blob/main/packages/transport-sdk/README.md

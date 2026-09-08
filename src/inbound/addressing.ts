@@ -1,4 +1,4 @@
-import type { AddressingRule, Addressing, BotIdentity } from "@assistant-hub-swarm/transport-sdk";
+import type { AddressingRule, Addressing, BotIdentity } from "@assistants-swarm-hub/transport-sdk";
 import type { Message } from "discord.js";
 
 /**

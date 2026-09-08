@@ -1,4 +1,4 @@
-import type { InboundMessage, Normalizer } from "@assistant-hub-swarm/transport-sdk";
+import type { InboundMessage, Normalizer } from "@assistants-swarm-hub/transport-sdk";
 import type { Message } from "discord.js";
 
 import { attachmentNote, loadMessageMedia } from "../discord/media";
