@@ -1,60 +1,45 @@
 # ash-transport-discord
 
-The **Discord transport** for [assistants-swarm-hub][core]: stateless gateway
-clients that register with a running core, forward every update as transport
-events, perform the sends the core asks for, and host Discord's own actions as
-MCP tools.
+The **Discord transport** for [assistants-swarm-hub][core], as the package
+`@assistants-swarm-hub/ash-transport-discord`: the core hosts it in its own
+process, runs a gateway client for each assistant's bot, forwards every
+update as the contract's events, performs the sends, and offers Discord's own
+actions as MCP tools.
 
-It has no database and no files. Everything it knows at runtime it learns from
-the core at boot (registration answers with the desired state) and from the bus
-(config changes). Its whole job is translation.
+It has no process, no port and no files of its own. Everything it knows at
+runtime it learns from the core (which bots to run, with which tokens), and
+its whole job is translation.
 
-It is also the **second proof** of the transport contract: it was written
+It is also the **second proof** of the transport interface: it was written
 against the published [`@assistants-swarm-hub/transport-sdk`][sdk] and
 [the manual][manual] alone, and the core needed no change to accept it — no
 branch, no capability flag, no list to add `discord` to.
 
-## Run it
-
-Against a core you are already running (its Redis and its internal token):
+## Install it into a core
 
 ```bash
-npm install              # needs a GitHub Packages token — see below
-cp .env.example .env     # REDIS_URL, INTERNAL_API_TOKEN, CORE_API_URL, SELF_URL
-npm run dev
+npm install @assistants-swarm-hub/ash-transport-discord
 ```
 
-`.npmrc` points the `@assistants-swarm-hub` scope at GitHub Packages, which
-wants a token on every request: a public package there is readable by any
-account, but not anonymously. Put one with `read:packages` in your user-level
-`~/.npmrc`, so it never reaches this repository:
+then restart the core. It finds the package among its installed dependencies,
+registers it, and the transport appears on the dashboard, where each
+assistant gets a Discord connection section with the bot token field this
+package announces. No core change, no service to add.
+
+The package lives in the org's registry on GitHub Packages, which wants a
+token on every request: a public package there is readable by any account,
+but not anonymously. Point the scope at the registry in the core's `.npmrc`
+and keep a token with `read:packages` in your user-level `~/.npmrc`:
 
 ```
+# .npmrc
+@assistants-swarm-hub:registry=https://npm.pkg.github.com
+```
+
+```
+# ~/.npmrc
 //npm.pkg.github.com/:_authToken=<token>
 ```
-
-Or as the container, which is how an operator runs it — one service next to
-the core's, and no change to the core:
-
-```yaml
-  discord:
-    image: ghcr.io/assistants-swarm-hub/ash-transport-discord:1.0.0
-    depends_on:
-      redis: { condition: service_healthy }
-    environment:
-      NODE_ENV: production
-      PORT: 3220
-      SELF_URL: http://discord:3220     # what the core will call
-      REDIS_URL: redis://redis:6379
-      CORE_API_URL: http://app:3200
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-change-me}
-      TZ: ${TZ:-UTC}
-    restart: unless-stopped
-```
-
-Do not publish its port (the internal API is the core's alone) and do not add
-it to the core's `depends_on` — the core depends on no transport, and this one
-registers itself whenever it comes up.
 
 ## Setting up the bot
 
@@ -88,30 +73,17 @@ In the [Discord Developer Portal](https://discord.com/developers/applications):
    deletes its own messages and clears its own reactions, and neither takes a
    permission. Granting Manage Messages would let it delete other people's.
 
-## Environment
-
-Bootstrap only. Bot tokens, which assistants to run, personas, tasks — all of
-that comes from the core at registration and on every change.
-
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `REDIS_URL` | yes | The bus and the update queue |
-| `INTERNAL_API_TOKEN` | yes | Must equal the core's |
-| `PORT` | no | This service's HTTP port (default 3220) |
-| `CORE_API_URL` | no | The core's base URL (default `http://localhost:3200`) |
-| `SELF_URL` | no | The base URL it **announces** — what the core calls back. Default `http://localhost:<PORT>` |
-
 ## What lives where
 
 Almost nothing. Registration, reconcile, deduping, event assembly, the sends,
-the HTTP surface, the delivery tools and shutdown are all the SDK's transport
-runtime — the same for every platform, so they live in one place. What is here
-is Discord, and the boundary is the folder: `discord/` is the only code that
-knows the Discord API exists.
+the delivery tools and shutdown are all the core's host — the same for every
+platform, so they live in one place. What is here is Discord, and the
+boundary is the folder: `discord/` is the only code that knows the Discord
+API exists, and replacing it is what gets you a different transport.
 
 ```
 src/
-  index.ts              the four pieces, handed to startTransportService
+  index.ts              the package: the four pieces, on defineTransport
   descriptor.ts         who this transport is: id, name, config fields, limits
 
   discord/              the only code that knows the Discord API
@@ -130,43 +102,52 @@ Tests sit beside what they cover.
 
 ## Where Discord differs from Telegram
 
-Both are the same runtime with a different platform under it, so everything
+Both are the same host with a different platform under it, so everything
 that differs is in `discord/` and `inbound/`. The parts worth knowing:
 
 | | |
 | --- | --- |
-| **Ids are snowflakes** | 64-bit, and `Number()` corrupts them. The wire keeps every id a string for exactly this reason, so nothing here parses one |
-| **2000 characters, not 4096** | Long replies split far more often. The cap is a number in the descriptor; the splitting itself is the runtime's, so both transports cut the same way |
+| **Ids are snowflakes** | 64-bit, and `Number()` corrupts them. The interface keeps every id a string for exactly this reason, so nothing here parses one |
+| **2000 characters, not 4096** | Long replies split far more often. The cap is a number in the descriptor; the splitting itself is the host's, so both transports cut the same way |
 | **Mentions are structured** | `<@id>`, not a name to match — so the structural check is exact, with no case folding to get wrong. A role or `@everyone` ping is deliberately *not* addressing |
 | **No voice bubble** | The core's voice reply arrives as audio plus its spoken text; this transport sends the audio as an attachment and reports `asVoice: false` rather than claiming a form the platform lacks |
 | **Menus are buttons** | The feedback flow's 👍/👎 menu is an action row, and a press is an interaction that must be answered within three seconds — so the toast comes back as an ephemeral reply |
-| **No chat titles to set** | A channel always has its own name, so `PUT /internal/chats/:id/title` is simply not served. An action a platform lacks is a route that does not exist, not a route that answers "unsupported" |
+| **No chat titles to set** | A channel always has its own name, so the connection has no `setChatTitle`. An action a platform lacks is a method that does not exist, not one that answers "unsupported" |
 | **No ffmpeg** | Attachments arrive with a CDN URL and a content type, so there is no frame sampling and no file-id round trip |
+
+## The interface
+
+Everything this package implements comes from
+[`@assistants-swarm-hub/transport-sdk`][sdk]: the descriptor, adapter,
+normalizer and addressing types, the runtime a tool receives, and the few
+helpers a transport's own tools call. The SDK is a **peer** dependency, and
+its major is the compatibility contract: the core you are installed into
+checks the range this package declares against the SDK it was built with and
+refuses a mismatch by name, with a reason its dashboard shows.
 
 ## Development
 
 ```bash
+npm install         # needs the GitHub Packages token above
 npm run typecheck
-npm run test        # the pure decisions: the addressing verdicts, the split,
-                    # and that snowflakes survive as strings
+npm run test        # the seams worth pinning: ids, media, menus, addressing
+npm run build       # dist/index.js, what the core imports
 ```
 
-Registration, the reconcile and the bus subscriptions all run at boot, so
-restart the service after a change before judging a live check — `tsx watch`
-will not re-run them.
+Against a core checkout next door, link this package into it and restart the
+core — a transport is boot-time, so a change needs a restart to show:
+
+```bash
+npm link
+cd ../ash-core && npm link @assistants-swarm-hub/ash-transport-discord --no-save
+```
+
+Note that `npm install` in the core prunes anything in its `node_modules` that
+its manifest does not list — a link included — so link again after one.
 
 Releases: bump `version` in `package.json`, push to `main`, and the workflow
-verifies, pushes `ghcr.io/assistants-swarm-hub/ash-transport-discord` on that
-version and tags the commit.
-
-## The contract
-
-Everything that crosses the boundary comes from the [SDK][sdk], and so does
-the runtime this service is a few hundred lines of platform code on top of.
-Two versions matter, and they are different numbers: this repository's own version is what
-its image is tagged with, and `CONTRACT_MAJOR` — exported by the SDK — is the
-**wire** major, announced at registration. A core that speaks another major
-refuses this transport by name, with a reason its dashboard shows.
+typechecks, tests, builds, publishes the package on that version, installs it
+back from the registry to prove it imports, and tags the commit.
 
 [core]: https://github.com/assistants-swarm-hub/ash-core
 [manual]: https://github.com/assistants-swarm-hub/ash-core/blob/main/docs/development/adding-a-transport.md

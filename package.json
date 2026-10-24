@@ -1,9 +1,7 @@
 {
-  "name": "ash-transport-discord",
+  "name": "@assistants-swarm-hub/ash-transport-discord",
   "version": "1.1.0",
-  "private": true,
-  "type": "module",
-  "description": "The Discord transport for assistants-swarm-hub: stateless gateway clients that register with a core, forward every update as transport events, perform the sends, and host Discord's actions as MCP tools.",
+  "description": "The Discord transport for assistants-swarm-hub: a package the core hosts — a gateway client for each assistant's bot, every update forwarded as the contract's events, the sends performed, and Discord's own actions as MCP tools.",
   "license": "MIT",
   "keywords": [
     "assistants-swarm-hub",
@@ -14,37 +12,41 @@
     "type": "git",
     "url": "git+https://github.com/assistants-swarm-hub/ash-transport-discord.git"
   },
+  "homepage": "https://github.com/assistants-swarm-hub/ash-transport-discord#readme",
+  "type": "module",
   "engines": {
     "node": ">=24.0.0"
   },
   "exports": {
     ".": {
-      "import": "./dist/transport.js"
+      "import": "./dist/index.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsup src/transport.ts --format esm --out-dir dist --clean",
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm --out-dir dist --clean",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@assistants-swarm-hub/transport-sdk": "^4.0.0",
-    "@hono/node-server": "^1.14.0",
+    "discord.js": "^14.27.0"
+  },
+  "peerDependencies": {
+    "@assistants-swarm-hub/transport-sdk": "^5.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "discord.js": "^14.27.0",
-    "dotenv": "^17.2.0",
-    "hono": "^4.7.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",
     "tsup": "^8.5.1",
-    "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

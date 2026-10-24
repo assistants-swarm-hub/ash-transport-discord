@@ -4,9 +4,8 @@ import {
   tracedTool,
   turnOf,
   type TransportRuntime,
+  type TransportToolServer,
 } from "@assistants-swarm-hub/transport-sdk";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Message } from "discord.js";
 import { z } from "zod";
 
 import { discordErrorText } from "./connection";
@@ -27,7 +26,7 @@ const DESCRIPTION =
   "notified, so use it alongside a reply rather than instead of one when something was " +
   "actually asked. The message must be one you can see here and not one of your own.";
 
-export function registerReactionTool(server: McpServer, runtime: TransportRuntime<Message>): void {
+export function registerReactionTool(server: TransportToolServer, runtime: TransportRuntime): void {
   server.registerTool(
     "set_message_reaction",
     {
