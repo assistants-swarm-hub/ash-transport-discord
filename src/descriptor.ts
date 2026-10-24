@@ -18,7 +18,6 @@ const TYPING_REFRESH_MS = 8_000;
 export const descriptor: TransportDescriptor = {
   id: "discord",
   name: "Discord",
-  mcpPath: "/mcp",
   maxMessageLength: MAX_MESSAGE_LENGTH,
   typingRefreshMs: TYPING_REFRESH_MS,
   connectionConfigSchema: [
